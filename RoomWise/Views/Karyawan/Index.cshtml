@@ -1,0 +1,153 @@
+﻿@model dynamic
+@using RoomWise.Function
+@{
+    ViewData["Title"] = "Dashboard";
+    ViewData["PageTitle"] = "Employee Dashboard";
+}
+
+@section Sidebar {
+    <div class="nav-section">
+        <div class="nav-section-title">Main</div>
+        <div class="nav-item">
+            <a class="nav-link @Html.IsActive("Karyawan", "Index")" asp-controller="Karyawan" asp-action="Index">
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Bookings</div>
+        <div class="nav-item">
+            <a class="nav-link @Html.IsActive("Karyawan", "Rooms")" asp-controller="Karyawan" asp-action="Rooms">
+                <i class="bi bi-door-open"></i>
+                <span>View Rooms</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a class="nav-link @Html.IsActive("Karyawan", "BookRoom")" asp-controller="Karyawan" asp-action="BookRoom">
+                <i class="bi bi-calendar-plus"></i>
+                <span>Book Room</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a class="nav-link @Html.IsActive("Karyawan", "MyBookings")" asp-controller="Karyawan" asp-action="MyBookings">
+                <i class="bi bi-calendar-check"></i>
+                <span>My Bookings</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Account</div>
+        <div class="nav-item">
+            <a class="nav-link" asp-controller="Auth" asp-action="Logout">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+}
+
+<div class="container-fluid">
+    <div class="mb-4">
+        <h2 class="fw-bold mb-1">Dashboard</h2>
+        <p class="text-muted">Selamat datang, @ViewBag.UserName!</p>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card stat-card primary">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0 text-white-50">My Upcoming Bookings</h6>
+                        <i class="bi bi-calendar-check fs-2 opacity-50"></i>
+                    </div>
+                    <h2 class="mb-0 fw-bold">@ViewBag.MyUpcomingBookings</h2>
+                    <p class="mb-0 mt-2 small">Scheduled reservations</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card stat-card success">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0 text-white-50">Available Rooms</h6>
+                        <i class="bi bi-door-open fs-2 opacity-50"></i>
+                    </div>
+                    <h2 class="mb-0 fw-bold">@ViewBag.AvailableRooms</h2>
+                    <p class="mb-0 mt-2 small">Ready to book</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-calendar-day me-2"></i>Today's Schedule</h5>
+                </div>
+                <div class="card-body">
+                    @if(ViewBag.TodayBookings != null && ((List<RoomWise.Models.Booking>)ViewBag.TodayBookings).Count > 0)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Room</th>
+                                        <th>Time</th>
+                                        <th>Purpose</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach(var booking in (List<RoomWise.Models.Booking>)ViewBag.TodayBookings)
+                                    {
+                                        <tr>
+                                            <td><strong>@booking.rom_name</strong></td>
+                                            <td>@booking.bkg_start_time.ToString(@"hh\:mm") - @booking.bkg_end_time.ToString(@"hh\:mm")</td>
+                                            <td>@(booking.bkg_purpose?.Length > 40 ? booking.bkg_purpose.Substring(0, 40) + "..." : booking.bkg_purpose)</td>
+                                            <td>
+                                                <span class="badge bg-primary">@booking.bkg_status</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-calendar-x fs-1 text-muted d-block mb-3"></i>
+                            <p class="text-muted">No bookings scheduled for today</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-lightning me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-3">
+                        <a href="@Url.Action("BookRoom", "Karyawan")" class="btn btn-primary">
+                            <i class="bi bi-calendar-plus me-2"></i>Book a Room
+                        </a>
+                        <a href="@Url.Action("Rooms", "Karyawan")" class="btn btn-outline-primary">
+                            <i class="bi bi-door-open me-2"></i>View Room Status
+                        </a>
+                        <a href="@Url.Action("MyBookings", "Karyawan")" class="btn btn-outline-primary">
+                            <i class="bi bi-calendar-check me-2"></i>My Bookings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

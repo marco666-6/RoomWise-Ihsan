@@ -1,0 +1,209 @@
+﻿@model List<RoomWise.Models.Room>
+@using RoomWise.Function
+@{
+    ViewData["Title"] = "View Rooms";
+    ViewData["PageTitle"] = "Room Status";
+}
+
+@section Sidebar {
+    <div class="nav-section">
+        <div class="nav-section-title">Main</div>
+        <div class="nav-item">
+            <a class="nav-link @Html.IsActive("Karyawan", "Index")" asp-controller="Karyawan" asp-action="Index">
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Bookings</div>
+        <div class="nav-item">
+            <a class="nav-link @Html.IsActive("Karyawan", "Rooms")" asp-controller="Karyawan" asp-action="Rooms">
+                <i class="bi bi-door-open"></i>
+                <span>View Rooms</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a class="nav-link @Html.IsActive("Karyawan", "BookRoom")" asp-controller="Karyawan" asp-action="BookRoom">
+                <i class="bi bi-calendar-plus"></i>
+                <span>Book Room</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a class="nav-link @Html.IsActive("Karyawan", "MyBookings")" asp-controller="Karyawan" asp-action="MyBookings">
+                <i class="bi bi-calendar-check"></i>
+                <span>My Bookings</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Account</div>
+        <div class="nav-item">
+            <a class="nav-link" asp-controller="Auth" asp-action="Logout">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+}
+
+@section Styles {
+    <style>
+        .room-card {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .room-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+        }
+
+        .room-card.available {
+            border-left: 4px solid #10b981;
+        }
+
+        .room-card.unavailable {
+            border-left: 4px solid #ef4444;
+            opacity: 0.7;
+        }
+
+        .facility-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(0, 150, 255, 0.1), rgba(0, 212, 255, 0.1));
+        }
+    </style>
+}
+
+<div class="container-fluid">
+    <div class="mb-4">
+        <h2 class="fw-bold mb-1">Room Status</h2>
+        <p class="text-muted">View available rooms and their facilities</p>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body text-center">
+                    <i class="bi bi-check-circle text-success fs-1 mb-2"></i>
+                    <h4 class="mb-0">@Model.Count(r => r.rom_status == "Available")</h4>
+                    <small class="text-muted">Available</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-warning">
+                <div class="card-body text-center">
+                    <i class="bi bi-tools text-warning fs-1 mb-2"></i>
+                    <h4 class="mb-0">@Model.Count(r => r.rom_status == "Maintenance")</h4>
+                    <small class="text-muted">Maintenance</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-danger">
+                <div class="card-body text-center">
+                    <i class="bi bi-x-circle text-danger fs-1 mb-2"></i>
+                    <h4 class="mb-0">@Model.Count(r => r.rom_status == "OutOfService")</h4>
+                    <small class="text-muted">Out of Service</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-secondary">
+                <div class="card-body text-center">
+                    <i class="bi bi-hourglass text-secondary fs-1 mb-2"></i>
+                    <h4 class="mb-0">@Model.Count(r => r.rom_status == "NotReady")</h4>
+                    <small class="text-muted">Not Ready</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        @foreach(var room in Model)
+        {
+            <div class="col-xl-4 col-md-6">
+                <div class="card room-card h-100 @(room.rom_status == "Available" ? "available" : "unavailable")">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="fw-bold mb-2">@room.rom_name</h5>
+                                <span class="badge @(room.rom_status == "Available" ? "bg-success" : room.rom_status == "Maintenance" ? "bg-warning" : room.rom_status == "OutOfService" ? "bg-danger" : "bg-secondary")">
+                                    @(room.rom_status == "Available" ? "Available" : room.rom_status == "Maintenance" ? "Under Maintenance" : room.rom_status == "OutOfService" ? "Out of Service" : "Not Ready")
+                                </span>
+                            </div>
+                            @if(room.rom_status == "Available")
+                            {
+                                <a href="@Url.Action("BookRoom", "Karyawan", new { roomId = room.rom_id })" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-calendar-plus"></i> Book
+                                </a>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-people text-primary me-2 fs-5"></i>
+                                <span class="fw-semibold">Capacity: @room.rom_capacity people</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <h6 class="small text-muted mb-2 fw-semibold">Facilities:</h6>
+                            <div class="row g-2">
+                                @if(room.rom_has_projector)
+                                {
+                                    <div class="col-4">
+                                        <div class="facility-icon">
+                                            <i class="bi bi-projector text-primary"></i>
+                                        </div>
+                                        <small class="d-block mt-1">Projector</small>
+                                    </div>
+                                }
+                                @if(room.rom_has_whiteboard)
+                                {
+                                    <div class="col-4">
+                                        <div class="facility-icon">
+                                            <i class="bi bi-layout-text-window text-primary"></i>
+                                        </div>
+                                        <small class="d-block mt-1">Whiteboard</small>
+                                    </div>
+                                }
+                                @if(room.rom_has_video_conf)
+                                {
+                                    <div class="col-4">
+                                        <div class="facility-icon">
+                                            <i class="bi bi-camera-video text-primary"></i>
+                                        </div>
+                                        <small class="d-block mt-1">Video Conf</small>
+                                    </div>
+                                }
+                                @if(!room.rom_has_projector && !room.rom_has_whiteboard && !room.rom_has_video_conf)
+                                {
+                                    <div class="col-12">
+                                        <p class="text-muted small mb-0">No additional facilities</p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        @if(!string.IsNullOrEmpty(room.rom_status_reason) && room.rom_status != "Available")
+                        {
+                            <div class="alert alert-warning small mb-0">
+                                <i class="bi bi-info-circle me-1"></i>
+                                <strong>Note:</strong> @room.rom_status_reason
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

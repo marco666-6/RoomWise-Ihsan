@@ -1,0 +1,142 @@
+﻿@using RoomWise.Function
+@{
+    ViewData["Title"] = "Dashboard";
+    ViewData["PageTitle"] = "Admin Dashboard";
+}
+
+@section Sidebar {
+    <div class="nav-section">
+        <div class="nav-section-title">Main</div>
+        <div class="nav-item">
+            <a class="nav-link @Html.IsActive("Admin", "Index")" asp-controller="Admin" asp-action="Index">
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Management</div>
+        <div class="nav-item">
+            <a class="nav-link @Html.IsActive("Admin", "Users")" asp-controller="Admin" asp-action="Users">
+                <i class="bi bi-people"></i>
+                <span>Users</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a class="nav-link @Html.IsActive("Admin", "Rooms")" asp-controller="Admin" asp-action="Rooms">
+                <i class="bi bi-door-open"></i>
+                <span>Rooms</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a class="nav-link @Html.IsActive("Admin", "Bookings")" asp-controller="Admin" asp-action="Bookings">
+                <i class="bi bi-calendar-check"></i>
+                <span>Bookings</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Account</div>
+        <div class="nav-item">
+            <a class="nav-link" asp-controller="Auth" asp-action="Logout">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+}
+
+<div class="container-fluid">
+    <div class="mb-4">
+        <h2 class="fw-bold mb-1">Dashboard</h2>
+        <p class="text-muted">Selamat datang, @ViewBag.UserName!</p>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card primary">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0 text-white-50">Total Users</h6>
+                        <i class="bi bi-people fs-2 opacity-50"></i>
+                    </div>
+                    <h2 class="mb-0 fw-bold">@ViewBag.TotalUsers</h2>
+                    <p class="mb-0 mt-2 small">Active users in system</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card success">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0 text-white-50">Total Rooms</h6>
+                        <i class="bi bi-door-open fs-2 opacity-50"></i>
+                    </div>
+                    <h2 class="mb-0 fw-bold">@ViewBag.TotalRooms</h2>
+                    <p class="mb-0 mt-2 small">Available meeting rooms</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card warning">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0 text-white-50">Today's Bookings</h6>
+                        <i class="bi bi-calendar-day fs-2 opacity-50"></i>
+                    </div>
+                    <h2 class="mb-0 fw-bold">@ViewBag.TodayBookings</h2>
+                    <p class="mb-0 mt-2 small">Scheduled for today</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card info">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0 text-white-50">Active Bookings</h6>
+                        <i class="bi bi-calendar-check fs-2 opacity-50"></i>
+                    </div>
+                    <h2 class="mb-0 fw-bold">@ViewBag.ActiveBookings</h2>
+                    <p class="mb-0 mt-2 small">Upcoming reservations</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-graph-up me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <a href="@Url.Action("Users", "Admin")" class="btn btn-outline-primary w-100 py-3">
+                                <i class="bi bi-person-plus fs-4 d-block mb-2"></i>
+                                <span class="fw-bold">Manage Users</span>
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="@Url.Action("Rooms", "Admin")" class="btn btn-outline-primary w-100 py-3">
+                                <i class="bi bi-door-closed fs-4 d-block mb-2"></i>
+                                <span class="fw-bold">Manage Rooms</span>
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="@Url.Action("Bookings", "Admin")" class="btn btn-outline-primary w-100 py-3">
+                                <i class="bi bi-calendar-plus fs-4 d-block mb-2"></i>
+                                <span class="fw-bold">Manage Bookings</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

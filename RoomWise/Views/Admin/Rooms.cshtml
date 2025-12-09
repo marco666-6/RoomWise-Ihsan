@@ -1,0 +1,292 @@
+﻿@model List<RoomWise.Models.Room>
+@using RoomWise.Function
+@{
+    ViewData["Title"] = "Rooms Management";
+    ViewData["PageTitle"] = "Rooms Management";
+}
+
+@section Sidebar {
+    <div class="nav-section">
+        <div class="nav-section-title">Main</div>
+        <div class="nav-item">
+            <a class="nav-link @Html.IsActive("Admin", "Index")" asp-controller="Admin" asp-action="Index">
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Management</div>
+        <div class="nav-item">
+            <a class="nav-link @Html.IsActive("Admin", "Users")" asp-controller="Admin" asp-action="Users">
+                <i class="bi bi-people"></i>
+                <span>Users</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a class="nav-link @Html.IsActive("Admin", "Rooms")" asp-controller="Admin" asp-action="Rooms">
+                <i class="bi bi-door-open"></i>
+                <span>Rooms</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a class="nav-link @Html.IsActive("Admin", "Bookings")" asp-controller="Admin" asp-action="Bookings">
+                <i class="bi bi-calendar-check"></i>
+                <span>Bookings</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Account</div>
+        <div class="nav-item">
+            <a class="nav-link" asp-controller="Auth" asp-action="Logout">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Rooms Management</h2>
+            <p class="text-muted">Manage meeting rooms and facilities</p>
+        </div>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRoomModal">
+            <i class="bi bi-plus-circle me-2"></i>Add Room
+        </button>
+    </div>
+
+    <div class="row g-4">
+        @foreach(var room in Model)
+        {
+            <div class="col-xl-4 col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="fw-bold mb-1">@room.rom_name</h5>
+                                <span class="badge @(room.rom_status == "Available" ? "bg-success" : room.rom_status == "Maintenance" ? "bg-warning" : "bg-danger")">
+                                    @room.rom_status
+                                </span>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="#" onclick="editRoom(@room.rom_id, '@room.rom_name', @room.rom_capacity, @room.rom_has_projector.ToString().ToLower(), @room.rom_has_whiteboard.ToString().ToLower(), @room.rom_has_video_conf.ToString().ToLower())">
+                                            <i class="bi bi-pencil me-2"></i>Edit
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#" onclick="updateRoomStatus(@room.rom_id, '@room.rom_name')">
+                                            <i class="bi bi-gear me-2"></i>Update Status
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-people text-primary me-2"></i>
+                                <span>Capacity: <strong>@room.rom_capacity people</strong></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <h6 class="small text-muted mb-2">Facilities:</h6>
+                            <div class="d-flex flex-wrap gap-2">
+                                @if(room.rom_has_projector)
+                                {
+                                    <span class="badge bg-info"><i class="bi bi-projector me-1"></i>Projector</span>
+                                }
+                                @if(room.rom_has_whiteboard)
+                                {
+                                    <span class="badge bg-info"><i class="bi bi-layout-text-window me-1"></i>Whiteboard</span>
+                                }
+                                @if(room.rom_has_video_conf)
+                                {
+                                    <span class="badge bg-info"><i class="bi bi-camera-video me-1"></i>Video Conf</span>
+                                }
+                                @if(!room.rom_has_projector && !room.rom_has_whiteboard && !room.rom_has_video_conf)
+                                {
+                                    <span class="text-muted small">No facilities</span>
+                                }
+                            </div>
+                        </div>
+
+                        @if(!string.IsNullOrEmpty(room.rom_status_reason))
+                        {
+                            <div class="alert alert-warning small mb-0">
+                                <i class="bi bi-info-circle me-1"></i>@room.rom_status_reason
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Add Room Modal -->
+<div class="modal fade" id="addRoomModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Add New Room</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-controller="Admin" asp-action="AddRoom" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Room Name</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Capacity</label>
+                        <input type="number" class="form-control" name="capacity" min="1" max="255" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Facilities</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="projector" id="add_projector">
+                            <label class="form-check-label" for="add_projector">
+                                <i class="bi bi-projector me-1"></i>Projector
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="whiteboard" id="add_whiteboard">
+                            <label class="form-check-label" for="add_whiteboard">
+                                <i class="bi bi-layout-text-window me-1"></i>Whiteboard
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="videoconf" id="add_videoconf">
+                            <label class="form-check-label" for="add_videoconf">
+                                <i class="bi bi-camera-video me-1"></i>Video Conference
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Room</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Room Modal -->
+<div class="modal fade" id="editRoomModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>Edit Room</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-controller="Admin" asp-action="EditRoom" method="post">
+                <input type="hidden" name="id" id="edit_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Room Name</label>
+                        <input type="text" class="form-control" name="name" id="edit_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Capacity</label>
+                        <input type="number" class="form-control" name="capacity" id="edit_capacity" min="1" max="255" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Facilities</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="projector" id="edit_projector">
+                            <label class="form-check-label" for="edit_projector">
+                                <i class="bi bi-projector me-1"></i>Projector
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="whiteboard" id="edit_whiteboard">
+                            <label class="form-check-label" for="edit_whiteboard">
+                                <i class="bi bi-layout-text-window me-1"></i>Whiteboard
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="videoconf" id="edit_videoconf">
+                            <label class="form-check-label" for="edit_videoconf">
+                                <i class="bi bi-camera-video me-1"></i>Video Conference
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Room</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Update Room Status Modal -->
+<div class="modal fade" id="updateStatusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-gear me-2"></i>Update Room Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-controller="Admin" asp-action="UpdateRoomStatus" method="post">
+                <input type="hidden" name="id" id="status_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Room</label>
+                        <input type="text" class="form-control" id="status_room_name" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" name="status" id="status_status" required>
+                            <option value="Available">Available</option>
+                            <option value="Maintenance">Under Maintenance</option>
+                            <option value="OutOfService">Out of Service</option>
+                            <option value="NotReady">Not Ready</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reason</label>
+                        <textarea class="form-control" name="reason" rows="3" placeholder="Explain the status change..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function editRoom(id, name, capacity, projector, whiteboard, videoconf) {
+            $('#edit_id').val(id);
+            $('#edit_name').val(name);
+            $('#edit_capacity').val(capacity);
+            $('#edit_projector').prop('checked', projector);
+            $('#edit_whiteboard').prop('checked', whiteboard);
+            $('#edit_videoconf').prop('checked', videoconf);
+            $('#editRoomModal').modal('show');
+        }
+
+        function updateRoomStatus(id, name) {
+            $('#status_id').val(id);
+            $('#status_room_name').val(name);
+            $('#updateStatusModal').modal('show');
+        }
+    </script>
+}

@@ -1,0 +1,292 @@
+﻿@using RoomWise.Function
+@{
+    ViewData["Title"] = "Book Room";
+    ViewData["PageTitle"] = "Book a Room";
+}
+
+@section Sidebar {
+    <div class="nav-section">
+        <div class="nav-section-title">Main</div>
+        <div class="nav-item">
+            <a class="nav-link @Html.IsActive("Karyawan", "Index")" asp-controller="Karyawan" asp-action="Index">
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Bookings</div>
+        <div class="nav-item">
+            <a class="nav-link @Html.IsActive("Karyawan", "Rooms")" asp-controller="Karyawan" asp-action="Rooms">
+                <i class="bi bi-door-open"></i>
+                <span>View Rooms</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a class="nav-link @Html.IsActive("Karyawan", "BookRoom")" asp-controller="Karyawan" asp-action="BookRoom">
+                <i class="bi bi-calendar-plus"></i>
+                <span>Book Room</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a class="nav-link @Html.IsActive("Karyawan", "MyBookings")" asp-controller="Karyawan" asp-action="MyBookings">
+                <i class="bi bi-calendar-check"></i>
+                <span>My Bookings</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Account</div>
+        <div class="nav-item">
+            <a class="nav-link" asp-controller="Auth" asp-action="Logout">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+}
+
+<div class="container-fluid">
+    <div class="mb-4">
+        <h2 class="fw-bold mb-1">Book a Room</h2>
+        <p class="text-muted">Reserve a meeting room for your needs</p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-calendar-plus me-2"></i>Booking Information</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-controller="Karyawan" asp-action="CreateBooking" method="post" id="bookingForm">
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Select Room</label>
+                            <select class="form-select" name="roomId" id="roomSelect" required>
+                                <option value="">Choose a room...</option>
+                                @foreach(var room in ViewBag.Rooms)
+                                {
+                                    <option value="@room.rom_id" 
+                                            data-capacity="@room.rom_capacity"
+                                            data-projector="@room.rom_has_projector"
+                                            data-whiteboard="@room.rom_has_whiteboard"
+                                            data-videoconf="@room.rom_has_video_conf"
+                                            selected="@(ViewBag.SelectedRoomId == room.rom_id)">
+                                        @room.rom_name (Capacity: @room.rom_capacity)
+                                    </option>
+                                }
+                            </select>
+                            <div id="roomDetails" class="mt-3" style="display: none;">
+                                <div class="alert alert-info">
+                                    <strong>Room Facilities:</strong>
+                                    <div class="mt-2" id="facilitiesList"></div>
+                                    <div class="mt-2">
+                                        <strong>Capacity:</strong> <span id="roomCapacity"></span> people
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold">Date</label>
+                                <input type="date" class="form-control" name="date" id="bookingDate" required min="@DateTime.Now.ToString("yyyy-MM-dd")">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold">Start Time</label>
+                                <input type="time" class="form-control" name="startTime" id="startTime" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold">End Time</label>
+                                <input type="time" class="form-control" name="endTime" id="endTime" required>
+                            </div>
+                        </div>
+
+                        <div id="availabilityAlert"></div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Purpose/Agenda</label>
+                            <textarea class="form-control" name="purpose" rows="4" required placeholder="Describe the meeting purpose and agenda..."></textarea>
+                            <small class="text-muted">Maximum 300 characters</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Number of Attendees (Optional)</label>
+                            <input type="number" class="form-control" name="attendees" id="attendees" min="1" max="255" placeholder="Expected number of participants">
+                            <div id="capacityWarning" class="text-danger small mt-1" style="display: none;">
+                                <i class="bi bi-exclamation-triangle me-1"></i>Number of attendees exceeds room capacity!
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <i class="bi bi-check-circle me-2"></i>Create Booking
+                            </button>
+                            <a href="@Url.Action("Index", "Karyawan")" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="mb-3"><i class="bi bi-info-circle me-2"></i>Booking Guidelines</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="bi bi-check-circle me-2"></i>Minimum booking duration: 30 minutes</li>
+                        <li class="mb-2"><i class="bi bi-check-circle me-2"></i>Maximum booking duration: 8 hours</li>
+                        <li class="mb-2"><i class="bi bi-check-circle me-2"></i>Book at least 1 hour in advance</li>
+                        <li class="mb-2"><i class="bi bi-check-circle me-2"></i>Check room availability before booking</li>
+                        <li class="mb-2"><i class="bi bi-check-circle me-2"></i>Cancellations must be made 2 hours before</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">Need Help?</h6>
+                    <p class="small text-muted">If you encounter any issues or need assistance with booking, please contact the admin or IT support.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2
+            $('#roomSelect').select2({
+                theme: 'bootstrap-5'
+            });
+
+            // Show room details when selected
+            $('#roomSelect').on('change', function() {
+                const selectedOption = $(this).find('option:selected');
+                if ($(this).val()) {
+                    const capacity = selectedOption.data('capacity');
+                    const projector = selectedOption.data('projector');
+                    const whiteboard = selectedOption.data('whiteboard');
+                    const videoconf = selectedOption.data('videoconf');
+
+                    let facilities = [];
+                    if (projector) facilities.push('<i class="bi bi-projector me-1"></i>Projector');
+                    if (whiteboard) facilities.push('<i class="bi bi-layout-text-window me-1"></i>Whiteboard');
+                    if (videoconf) facilities.push('<i class="bi bi-camera-video me-1"></i>Video Conference');
+                    
+                    $('#roomCapacity').text(capacity);
+                    $('#facilitiesList').html(facilities.length > 0 ? facilities.join(', ') : 'No additional facilities');
+                    $('#roomDetails').show();
+
+                    // Check capacity when room changes
+                    checkCapacity();
+                } else {
+                    $('#roomDetails').hide();
+                }
+            });
+
+            // Check capacity warning
+            $('#attendees').on('input', checkCapacity);
+
+            function checkCapacity() {
+                const capacity = $('#roomSelect').find('option:selected').data('capacity');
+                const attendees = parseInt($('#attendees').val());
+                
+                if (attendees && capacity && attendees > capacity) {
+                    $('#capacityWarning').show();
+                } else {
+                    $('#capacityWarning').hide();
+                }
+            }
+
+            // Check availability
+            function checkAvailability() {
+                const roomId = $('#roomSelect').val();
+                const date = $('#bookingDate').val();
+                const startTime = $('#startTime').val();
+                const endTime = $('#endTime').val();
+
+                if (roomId && date && startTime && endTime) {
+                    $.ajax({
+                        url: '@Url.Action("CheckAvailability", "Karyawan")',
+                        type: 'GET',
+                        data: {
+                            roomId: roomId,
+                            date: date,
+                            startTime: startTime,
+                            endTime: endTime
+                        },
+                        success: function(response) {
+                            if (response.available) {
+                                $('#availabilityAlert').html(
+                                    '<div class="alert alert-success"><i class="bi bi-check-circle me-2"></i>Room is available for the selected time slot!</div>'
+                                );
+                                $('#submitBtn').prop('disabled', false);
+                            } else {
+                                let conflictHtml = '<div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i><strong>Room is not available!</strong><br><small>Conflicts with:</small><ul class="mb-0 mt-1">';
+                                response.conflicts.forEach(function(conflict) {
+                                    conflictHtml += '<li>' + conflict + '</li>';
+                                });
+                                conflictHtml += '</ul></div>';
+                                $('#availabilityAlert').html(conflictHtml);
+                                $('#submitBtn').prop('disabled', true);
+                            }
+                        },
+                        error: function() {
+                            $('#availabilityAlert').html(
+                                '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>Unable to check availability. Please try again.</div>'
+                            );
+                        }
+                    });
+                }
+            }
+
+            // Trigger availability check
+            $('#roomSelect, #bookingDate, #startTime, #endTime').on('change', function() {
+                checkAvailability();
+            });
+
+            // Validate duration on form submit
+            $('#bookingForm').on('submit', function(e) {
+                const startTime = $('#startTime').val();
+                const endTime = $('#endTime').val();
+                
+                if (startTime && endTime) {
+                    const start = new Date('2000-01-01 ' + startTime);
+                    const end = new Date('2000-01-01 ' + endTime);
+                    const durationMinutes = (end - start) / 60000;
+                    
+                    if (durationMinutes < 30) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid Duration',
+                            text: 'Booking duration must be at least 30 minutes!'
+                        });
+                        return false;
+                    }
+                    
+                    if (durationMinutes > 480) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid Duration',
+                            text: 'Booking duration cannot exceed 8 hours!'
+                        });
+                        return false;
+                    }
+                }
+            });
+
+            // Trigger on page load if room is pre-selected
+            if ($('#roomSelect').val()) {
+                $('#roomSelect').trigger('change');
+            }
+        });
+    </script>
+}

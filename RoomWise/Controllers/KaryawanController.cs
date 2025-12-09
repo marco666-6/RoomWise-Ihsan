@@ -206,7 +206,7 @@ namespace RoomWise.Controllers
         public IActionResult MyBookings()
         {
             if (!IsLoggedIn()) return RedirectToAction("Index", "Auth");
-            
+
             int? userIdNullable = HttpContext.Session.GetInt32("UserId");
             if (!userIdNullable.HasValue)
             {
@@ -214,21 +214,22 @@ namespace RoomWise.Controllers
                 return RedirectToAction("Index", "Auth");
             }
             int userId = userIdNullable.Value;
-            
+
             List<Booking> bookings = new List<Booking>();
             using (SqlConnection conn = new SqlConnection(_db.GetConnectionString()))
             {
                 conn.Open();
                 string query = @"SELECT b.*, r.rom_name, u.usr_name 
-                               FROM rws_bookings b
-                               INNER JOIN rws_rooms r ON b.bkg_rom_id = r.rom_id
-                               INNER JOIN rws_users u ON b.bkg_usr_id = u.usr_id
-                               WHERE b.bkg_usr_id = @userId
-                               ORDER BY b.bkg_dt DESC, b.bkg_start_time DESC";
-                
+                                FROM rws_bookings b
+                                INNER JOIN rws_rooms r ON b.bkg_rom_id = r.rom_id
+                                INNER JOIN rws_users u ON b.bkg_usr_id = u.usr_id
+                                WHERE b.bkg_usr_id = @userId
+                                ORDER BY b.bkg_dt DESC, b.bkg_start_time DESC";
+
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
                     cmd.Parameters.AddWithValue("@userId", userId);
+
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -241,18 +242,23 @@ namespace RoomWise.Controllers
                                 bkg_dt = reader.GetDateTime(3),
                                 bkg_start_time = reader.GetTimeSpan(4),
                                 bkg_end_time = reader.GetTimeSpan(5),
-                                bkg_purpose = reader.GetString(6),
+
+                                // NULL-SAFE string fields
+                                bkg_purpose = reader.IsDBNull(6) ? "" : reader.GetString(6),
                                 bkg_attendees = reader.IsDBNull(7) ? null : reader.GetByte(7),
-                                bkg_status = reader.GetString(8),
+                                bkg_status = reader.IsDBNull(8) ? "" : reader.GetString(8),
+
+                                // Index 9 = created_by (skip if not used)
                                 bkg_cancelled_reason = reader.IsDBNull(10) ? null : reader.GetString(10),
-                                rom_name = reader.GetString(14),
-                                usr_name = reader.GetString(15)
+
+                                // Joined room/user name
+                                rom_name = reader.IsDBNull(14) ? "" : reader.GetString(14),
+                                usr_name = reader.IsDBNull(15) ? "" : reader.GetString(15)
                             });
                         }
                     }
                 }
             }
-            
             return View(bookings);
         }
         

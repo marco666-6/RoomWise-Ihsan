@@ -1,0 +1,321 @@
+﻿@using RoomWise.Function
+@{
+    ViewData["Title"] = "Room Feedback";
+    ViewData["PageTitle"] = "Room Feedback";
+}
+
+@section Sidebar {
+    <div class="nav-section">
+        <div class="nav-section-title">Main</div>
+        <div class="nav-item">
+            <a class="nav-link @Html.IsActive("Karyawan", "Index")" asp-controller="Karyawan" asp-action="Index">
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Bookings</div>
+        <div class="nav-item">
+            <a class="nav-link @Html.IsActive("Karyawan", "Rooms")" asp-controller="Karyawan" asp-action="Rooms">
+                <i class="bi bi-door-open"></i>
+                <span>View Rooms</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a class="nav-link @Html.IsActive("Karyawan", "BookRoom")" asp-controller="Karyawan" asp-action="BookRoom">
+                <i class="bi bi-calendar-plus"></i>
+                <span>Book Room</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a class="nav-link @Html.IsActive("Karyawan", "MyBookings")" asp-controller="Karyawan" asp-action="MyBookings">
+                <i class="bi bi-calendar-check"></i>
+                <span>My Bookings</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Account</div>
+        <div class="nav-item">
+            <a class="nav-link" asp-controller="Auth" asp-action="Logout">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+}
+
+@section Styles {
+    <style>
+        .star-rating {
+            display: flex;
+            gap: 0.5rem;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .star-rating i {
+            color: #d1d5db;
+            transition: all 0.2s ease;
+        }
+
+        .star-rating i.active,
+        .star-rating i:hover {
+            color: #f59e0b;
+        }
+
+        .photo-preview {
+            position: relative;
+            display: inline-block;
+            margin: 0.5rem;
+        }
+
+        .photo-preview img {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+        }
+
+        .photo-preview .remove-photo {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        .photo-preview .remove-photo:hover {
+            background: #dc2626;
+        }
+    </style>
+}
+
+<div class="container-fluid">
+    <div class="mb-4">
+        <h2 class="fw-bold mb-1">Room Feedback</h2>
+        <p class="text-muted">Share your experience about the meeting room</p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="bi bi-info-circle me-2"></i>Booking Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <strong class="text-muted d-block mb-1">Room</strong>
+                            <span class="fs-5">@ViewBag.Booking.rom_name</span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong class="text-muted d-block mb-1">Date</strong>
+                            <span class="fs-5">@ViewBag.Booking.bkg_dt.ToString("dd MMM yyyy")</span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong class="text-muted d-block mb-1">Time</strong>
+                            <span>@ViewBag.Booking.bkg_start_time.ToString(@"hh\:mm") - @ViewBag.Booking.bkg_end_time.ToString(@"hh\:mm")</span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong class="text-muted d-block mb-1">Purpose</strong>
+                            <span>@ViewBag.Booking.bkg_purpose</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-star me-2"></i>Submit Feedback</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-controller="Karyawan" asp-action="SubmitFeedback" method="post" enctype="multipart/form-data" id="feedbackForm">
+                        <input type="hidden" name="bookingId" value="@ViewBag.Booking.bkg_id">
+                        <input type="hidden" name="roomId" value="@ViewBag.Booking.bkg_rom_id">
+                        <input type="hidden" name="rating" id="ratingValue" value="0">
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Rate the Room (1-5 stars)</label>
+                            <div class="star-rating" id="starRating">
+                                <i class="bi bi-star" data-rating="1"></i>
+                                <i class="bi bi-star" data-rating="2"></i>
+                                <i class="bi bi-star" data-rating="3"></i>
+                                <i class="bi bi-star" data-rating="4"></i>
+                                <i class="bi bi-star" data-rating="5"></i>
+                            </div>
+                            <div id="ratingError" class="text-danger small mt-1" style="display: none;">
+                                Please select a rating
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Comments/Feedback</label>
+                            <textarea class="form-control" name="comment" rows="6" placeholder="Share your experience, any issues, or suggestions for improvement...
+
+Include details about:
+- Room condition
+- Equipment functionality
+- Cleanliness
+- Any problems encountered
+- Suggestions"></textarea>
+                            <small class="text-muted">Optional - Maximum 500 characters</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Upload Photos (Optional)</label>
+                            <input type="file" class="form-control" name="photos" id="photoInput" accept="image/*" multiple>
+                            <small class="text-muted">Maximum 3 photos, total size under 7MB</small>
+                            <div id="photoPreview" class="mt-3"></div>
+                            <div id="photoError" class="text-danger small mt-1" style="display: none;"></div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send me-2"></i>Submit Feedback
+                            </button>
+                            <a href="@Url.Action("MyBookings", "Karyawan")" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Back to Bookings
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="mb-3"><i class="bi bi-lightbulb me-2"></i>Feedback Tips</h5>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="bi bi-check-circle me-2"></i>Be specific about any issues</li>
+                        <li class="mb-2"><i class="bi bi-check-circle me-2"></i>Upload photos of problems</li>
+                        <li class="mb-2"><i class="bi bi-check-circle me-2"></i>Mention equipment that needs repair</li>
+                        <li class="mb-2"><i class="bi bi-check-circle me-2"></i>Suggest improvements</li>
+                        <li class="mb-2"><i class="bi bi-check-circle me-2"></i>Your feedback helps maintain quality</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            let selectedRating = 0;
+            let selectedFiles = [];
+
+            // Star rating functionality
+            $('.star-rating i').on('click', function() {
+                selectedRating = $(this).data('rating');
+                $('#ratingValue').val(selectedRating);
+                updateStars(selectedRating);
+                $('#ratingError').hide();
+            });
+
+            $('.star-rating i').on('mouseenter', function() {
+                const rating = $(this).data('rating');
+                updateStars(rating);
+            });
+
+            $('.star-rating').on('mouseleave', function() {
+                updateStars(selectedRating);
+            });
+
+            function updateStars(rating) {
+                $('.star-rating i').each(function() {
+                    if ($(this).data('rating') <= rating) {
+                        $(this).removeClass('bi-star').addClass('bi-star-fill active');
+                    } else {
+                        $(this).removeClass('bi-star-fill active').addClass('bi-star');
+                    }
+                });
+            }
+
+            // Photo upload functionality
+            $('#photoInput').on('change', function(e) {
+                const files = Array.from(e.target.files);
+                
+                // Validate number of files
+                if (files.length > 3) {
+                    $('#photoError').text('Maximum 3 photos allowed').show();
+                    this.value = '';
+                    return;
+                }
+
+                // Validate total size
+                let totalSize = 0;
+                files.forEach(file => totalSize += file.size);
+                
+                if (totalSize > 7 * 1024 * 1024) {
+                    $('#photoError').text('Total photo size cannot exceed 7MB').show();
+                    this.value = '';
+                    return;
+                }
+
+                $('#photoError').hide();
+                selectedFiles = files;
+                displayPhotos(files);
+            });
+
+            function displayPhotos(files) {
+                $('#photoPreview').empty();
+                
+                files.forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const preview = $(`
+                            <div class="photo-preview">
+                                <img src="${e.target.result}" alt="Photo ${index + 1}">
+                                <button type="button" class="remove-photo" data-index="${index}">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                        `);
+                        $('#photoPreview').append(preview);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            // Remove photo
+            $(document).on('click', '.remove-photo', function() {
+                const index = $(this).data('index');
+                selectedFiles.splice(index, 1);
+                
+                // Update file input
+                const dt = new DataTransfer();
+                selectedFiles.forEach(file => dt.items.add(file));
+                $('#photoInput')[0].files = dt.files;
+                
+                displayPhotos(selectedFiles);
+            });
+
+            // Form validation
+            $('#feedbackForm').on('submit', function(e) {
+                if (selectedRating === 0) {
+                    e.preventDefault();
+                    $('#ratingError').show();
+                    $('html, body').animate({
+                        scrollTop: $('#starRating').offset().top - 100
+                    }, 500);
+                    return false;
+                }
+            });
+        });
+    </script>
+}
