@@ -389,11 +389,11 @@ namespace RoomWise.Controllers
                             bkg_dt = reader.GetDateTime(3),
                             bkg_start_time = reader.GetTimeSpan(4),
                             bkg_end_time = reader.GetTimeSpan(5),
-                            bkg_purpose = reader.GetString(6),
+                            bkg_purpose = reader.IsDBNull(6) ? "" : reader.GetString(6),
                             bkg_attendees = reader.IsDBNull(7) ? null : reader.GetByte(7),
-                            bkg_status = reader.GetString(8),
-                            rom_name = reader.GetString(14),
-                            usr_name = reader.GetString(15)
+                            bkg_status = reader.IsDBNull(8) ? "" : reader.GetString(8),
+                            rom_name = reader.IsDBNull(15) ? "" : reader.GetString(15),
+                            usr_name = reader.IsDBNull(16) ? "" : reader.GetString(16)
                         });
                     }
                 }
